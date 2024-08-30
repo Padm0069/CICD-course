@@ -1,0 +1,13 @@
+# Use Maven to build the application
+FROM maven:3.8.6-openjdk-11 AS build
+WORKDIR /app
+COPY pom.xml .
+COPY src ./src
+RUN apt-get update && apt-get install -y ca-certificates \
+    && mvn clean package -DskipTests
+
+# Use a smaller image to run the application
+FROM openjdk:11-jre-slim
+COPY --from=build /app/target/course-service.jar /app/enrollment-service.jar
+EXPOSE 8081
+CMD ["java", "-jar", "/app/enrollment-service.jar", "--server.port=8081"]
